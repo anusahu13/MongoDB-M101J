@@ -1,0 +1,13 @@
+Problem :  Remove the grade of type "homework" with the lowest score for each student from the dataset(Grades Collection) and provide the identity
+of the student with the highest average in the class with following query that uses the aggregation framework. 
+The answer will appear in the _id field of the resulting document.
+
+
+> db.grades.aggregate({'$group':{'_id':'$student_id', 'average':{$avg:'$score'}}}, {'$sort':{'average':-1}}, {'$limit':1});
+{ "_id" : 54, "average" : 96.19488173037341 }
+
+Answer : 54
+
+
+
+
