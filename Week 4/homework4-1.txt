@@ -1,0 +1,150 @@
+db.products.insert({"sku": 4 ,"price": 23, "description" : "good", "category":"comm", "brand" : "GE", "reviews" : [{"author" :"A" }, {"buyer" :"C"}]});
+db.products.insert({"sku": 5 ,"price": 38, "description" : "bad", "category":"electrical", "brand" : "LG", "reviews" : [{"author" :"A+" }, {"buyer" :"A"}]});
+db.products.insert({"sku": 2 ,"price": 45, "description" : "ok", "category":"electrical", "brand" : "GE", "reviews" : [{"author" :"B" }, {"buyer" :"B"}]});
+db.products.insert({"sku": 9 ,"price": 18, "description" : "good", "category":"comm", "brand" : "GE", "reviews" : [{"author" :"B+" }, {"buyer" :"C"}]});
+db.products.insert({"sku": 8 ,"price": 47, "description" : "ok", "category":"comm", "brand" : "LG", "reviews" : [{"author" :"A" }, {"buyer" :"A"}]});
+db.products.insert({"sku": 12 ,"price": 33, "description" : "bad", "category":"electrical", "brand" : "GE", "reviews" : [{"author" :"B" }, {"buyer" :"D"}]});
+
+=>Indexes present in Products collection
+db.products.getIndexes()
+[
+	{
+		"v" : 1,
+		"key" : {
+			"_id" : 1
+		},
+		"ns" : "store.products",
+		"name" : "_id_"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"sku" : 1
+		},
+                "unique" : true,
+		"ns" : "store.products",
+		"name" : "sku_1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"price" : -1
+		},
+		"ns" : "store.products",
+		"name" : "price_-1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"description" : 1
+		},
+		"ns" : "store.products",
+		"name" : "description_1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"category" : 1,
+			"brand" : 1
+		},
+		"ns" : "store.products",
+		"name" : "category_1_brand_1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"reviews.author" : 1
+		},
+		"ns" : "store.products",
+		"name" : "reviews.author_1"
+	}
+Which of the following queries can utilize at least one index to find all matching documents or to sort? Check all that apply.
+
+db.products.find( { brand : 'GE' } ).sort( { category : 1, brand : -1 } )
+db.products.find( { $and : [ { price : { $gt : 30 } },{ price : { $lt : 50 } } ] } ).sort( { brand : 1 } )
+db.products.find( { 'brand' : "GE" } ).sort( { price : 1 } )
+db.products.find( { 'brand' : "GE" } )
+
+Answer : 2&3
+
+1. db.products.find( {  brand : 'GE'} ).sort( { category : 1, brand : -1 } )  - No Index 
+"winningPlan" : {
+                        "stage" : "SORT",
+                        "sortPattern" : {
+                                "category" : 1,
+                                "brand" : -1
+                        },
+                        "inputStage" : {
+                                "stage" : "COLLSCAN",
+                                "filter" : {
+                                        "brand" : {
+                                                "$eq" : "GE"
+                                        }
+                                },
+                                "direction" : "forward"
+                        }
+                },
+				
+
+2. db.products.find( { $and : [ { price : { $gt : 30 } },{ price : { $lt : 50 } } ] } ).sort( { brand : 1 } ) - Index 
+"winningPlan" : {
+                        "stage" : "SORT",
+                        "sortPattern" : {
+                                "brand" : 1
+                        },
+                        "inputStage" : {
+                                "stage" : "KEEP_MUTATIONS",
+                                "inputStage" : {
+                                        "stage" : "FETCH",
+                                        "inputStage" : {
+                                                "stage" : "IXSCAN",
+                                                "keyPattern" : {
+                                                        "price" : -1
+                                                },
+                                                "indexName" : "price_-1",
+                                                "isMultiKey" : false,
+                                                "direction" : "forward",
+                                                "indexBounds" : {
+                                                        "price" : [
+                                                                "(50.0, 30.0)"
+                                                        ]
+                                                }
+                                        }
+                                }
+                        }
+                },
+				
+3. db.products.find( {  category : "electrical", brand : 'GE'} ).sort( { price : 1 } )	- Index
+"winningPlan" : {
+                        "stage" : "FETCH",
+                        "filter" : {
+                                "brand" : {
+                                        "$eq" : "GE"
+                                }
+                        },
+                        "inputStage" : {
+                                "stage" : "IXSCAN",
+                                "keyPattern" : {
+                                        "price" : -1
+                                },
+                                "indexName" : "price_-1",
+                                "isMultiKey" : false,
+                                "direction" : "backward",
+                                "indexBounds" : {
+                                        "price" : [
+                                                "[MinKey, MaxKey]"
+                                        ]
+                                }
+                        }
+                },			
+				
+. db.products.find( {'brand' : "GE" } ) - No Index
+"winningPlan" : {
+                        "stage" : "COLLSCAN",
+                        "filter" : {
+                                "brand" : {
+                                        "$eq" : "GE"
+                                }
+                        },
+                        "direction" : "forward"
+                },				
