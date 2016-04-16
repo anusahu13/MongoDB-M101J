@@ -1,0 +1,32 @@
+Finding the most frequent author of comments on your blog
+
+First, download the handout and unpack.
+
+You can import the data with:
+
+mongoimport -d blog -c posts --drop small_posts.json
+Make sure that you're dropping the old collection if you already had data; it should now have 200 documents.
+
+In this assignment you will use the aggregation framework to find the most frequent author of comments on your blog. We will be using the same basic dataset as last week, with posts and comments shortened considerably, and with many fewer documents.
+
+Use the aggregation framework in the shell to calculate the author with the greatest number of comments.
+
+To help you verify your work before submitting, the author with the fewest comments is Cody Strouth and he commented 68 times.
+
+Once you've found the correct answer with your query, please choose your answer below for the most prolific comment author.
+
+Please use the Aggregation pipeline to solve this problem.
+
+
+Solution :
+
+db.posts.aggregate([{$unwind : "$comments"},   /* Unwinding the comment array */
+					{$group : {"_id" : "$comments.author", "totalComments" : {$sum : 1}}}, /* Getting total number of comments made by author */
+					{$sort : {"totalComments": -1}}, /* Sorting totalComments in descending order to find out greatest number of comments*/
+					{$limit : 1}, /* Limiting to 1 as need to find out the one author with greatest number of comments */
+					{$project : { "_id" : 0 , "author" : "$_id", "totalComments" : 1}}]) /* Beautifying the result */
+					
+Result :
+{ "totalComments" : 112, "author" : "Gisela Levin" }
+=>Gisela Levin			
+
